@@ -7,7 +7,7 @@ const { route } = require('./product');
 //Get the cart
 router.get('/cart/:buyer_id', (req, res) => {
     Cart.findOne({buyerId: req.params.buyer_id}).then(cart => {
-        if(cart === null) {
+        if(cart === null || cart.products.length===0) {
             res.status(200).json({message: "Cart is Empty"});
         } else {
             res.status(200).json({cart: cart});
@@ -145,16 +145,21 @@ router.post('/cart/:buyer_id/empty_all', async (req, res) => {
 });
 
 //Deleting the cart
-router.delete('/cart/:buyer_id/delete_cart/:id', (req, res) => {
-    Cart.findByIdAndRemove(req.params.id, (err, resposne) => {
-        if(err) {
+router.delete('/cart/:buyer_id/delete_cart', async (req, res) => {
+    let cart = await Cart.findOne({buyerId: req.params.buyer_id});
+    if(cart === null) {
+        res.status(200).json({message: 'Invalid request'});
+    } else {
+        Cart.findByIdAndRemove(cart._id, (err, resposne) => {
             if(err) {
-                res.status(200).json({error: err});
-            } else {
-                res.status(200).json({message: 'Cart Deleted'});
+                if(err) {
+                    res.status(200).json({error: err});
+                } else {
+                    res.status(200).json({message: 'Cart Deleted'});
+                }
             }
-        }
-    })
+        })
+    }
 })
 
 module.exports=router;

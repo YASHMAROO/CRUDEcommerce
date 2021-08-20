@@ -6,8 +6,8 @@ const Wishlist=require('../model/Wishlist');
 //Get the wishlist
 router.get('/:buyer_id/wishlist', (req, res) => {
     Wishlist.findOne({buyerId: req.params.buyer_id}).then(wishlist => {
-        if(wishlist === null) {
-            res.status(200).json({message: "No items added in wishlist"});
+        if(wishlist === null || wishlist.products.length===0) {
+            res.status(200).json({message: "Wishlist is empty"});
         } else {
             res.status(200).json({wishlist: wishlist});
         }
@@ -15,7 +15,7 @@ router.get('/:buyer_id/wishlist', (req, res) => {
 });
 
 //Add item to wishlist
-router.post('/:buyer_id/add_to_wishlist/:id', async (req, res) => {
+router.post('/wishlist/:buyer_id/add_item/:id', async (req, res) => {
     let wishlist = await Wishlist.findOne({buyerId: req.params.buyer_id});
     if(wishlist === null) {
         let wl = new Wishlist();
@@ -45,7 +45,7 @@ router.post('/:buyer_id/add_to_wishlist/:id', async (req, res) => {
 })
 
 //Deleting item from the wishlist
-router.post('/:buyer_id/delete_item/:id', async (req, res) => {
+router.post('/wishlist/:buyer_id/delete_item/:id', async (req, res) => {
     let wishlist = await Wishlist.findOne({buyerId: req.params.buyer_id});
     if(wishlist === null) {
         res.status(200).json({message: "Wishlist Not Present"});
@@ -58,16 +58,34 @@ router.post('/:buyer_id/delete_item/:id', async (req, res) => {
 });
 
 //Emptying the entire wishlist
-router.delete('/:buyer_id/empty_wishlist/:id', (req, res) => {
-    Wishlist.findByIdAndRemove(req.params.id, (err, resposne) => {
-        if(err) {
+router.post('/wishlist/:buyer_id/empty_all', async (req, res) => {
+    let wishlist = await Wishlist.findOne({buyerId: req.params.buyer_id});
+    if(wishlist === null) {
+        res.status(200).json({message: 'Invalid Request'});
+    } else {
+        let prodLength = wishlist.products.length;
+        wishlist.products.splice(0, prodLength);
+        wishlist.save();
+        res.status(200).json({message: 'Wishlist Emptied'});
+    }
+})
+
+//Deleting the cart
+router.delete('/wishlist/:buyer_id/delete_wishlist', async (req, res) => {
+    let wishlist = await Wishlist.findOne({buyerId: req.params.buyer_id});
+    if(wishlist === null) {
+        res.status(200).json({message: 'Invalid request'});
+    } else {
+        Wishlist.findByIdAndRemove(wishlist._id, (err, resposne) => {
             if(err) {
-                res.status(200).json({error: err});
-            } else {
-                res.status(200).json({message: 'Wishlist Emptied'});
+                if(err) {
+                    res.status(200).json({error: err});
+                } else {
+                    res.status(200).json({message: 'Wishlist Deleted'});
+                }
             }
-        }
-    })
+        })
+    }
 })
 
 module.exports=router;

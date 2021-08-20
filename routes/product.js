@@ -36,8 +36,8 @@ router.post('/new_product', (req, res) => {
     let imageUrl = req.body.imageUrl;
     let description = req.body.description;
     let price = req.body.price;
-    if(sellerId=='' || name=='' || imageUrl=='' || description=='' || price==0) {
-        res.status(200).json({message: 'Please add all the fields'});
+    if(sellerId=='' || name=='' || imageUrl=='' || description=='' || price<=0) {
+        res.status(200).json({message: 'Please add all the fields or check the price filed it canoot be -ve or 0'});
     } else {
         let sanitizedProduct = DOMPurify.sanitize(description);
         newProduct = {
@@ -58,7 +58,7 @@ router.post('/new_product', (req, res) => {
 });
 
 //Getting single products
-router.get('products/:id', (req, res) => {
+router.get('/products/:id', (req, res) => {
     Product.findById(req.params.id, (err, detailProduct) => {
         if(err) {
             res.status(200).json({error: err});
@@ -83,7 +83,7 @@ router.get('/:id/edit_product', (req,res) => {
 //Editing the product
 router.put('/:id', (req, res) => {
     Product.findByIdAndUpdate(req.params.id, req.body.product).then(editProduct => {
-        res.status(200).json({product: editProduct, message: 'Product successfully updated'});
+        res.status(200).json({message: 'Product successfully updated'});
     })
 })
 
